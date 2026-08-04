@@ -42,6 +42,12 @@ function inicializarVideo() {
     const indicadorPlayPause =
         conteudo.querySelector('#indicadorPlayPause')
 
+    const indicadorSeek =
+        conteudo.querySelector('#indicadorSeek')
+
+    const iconeSeek =
+        conteudo.querySelector('#iconeSeek')
+
     const indicadorVolume =
         conteudo.querySelector('#indicadorVolume')
 
@@ -69,6 +75,8 @@ function inicializarVideo() {
     // ==========================================
 
     let timerIndicador
+
+    let timerSeek
 
     let timerVolume
 
@@ -130,6 +138,99 @@ function inicializarVideo() {
 
     }
 
+    // ==========================================
+    // INDICADOR DE AVANÇO / RETROCESSO
+    // ==========================================
+
+    // ==========================================
+    // INDICADOR DE AVANÇO / RETROCESSO
+    // ==========================================
+
+    function mostrarIndicadorSeek(direcao) {
+
+        if (!indicadorSeek || !iconeSeek) return
+
+
+        clearTimeout(timerSeek)
+
+
+        // --------------------------------------
+        // CONFIGURA ÍCONE
+        // --------------------------------------
+
+        if (direcao === 'direita') {
+
+            iconeSeek.src = 'videos/right.png'
+
+            iconeSeek.alt = 'Avançar 5 segundos'
+
+        } else {
+
+            iconeSeek.src = 'videos/left.png'
+
+            iconeSeek.alt = 'Voltar 5 segundos'
+
+        }
+
+
+        // --------------------------------------
+        // CONFIGURA POSIÇÃO
+        // --------------------------------------
+
+        indicadorSeek.classList.remove(
+            'esquerda',
+            'direita'
+        )
+
+        indicadorSeek.classList.add(direcao)
+
+
+        // --------------------------------------
+        // REINICIA ANIMAÇÃO
+        // --------------------------------------
+
+        indicadorSeek.classList.remove('sumir')
+
+        indicadorSeek.classList.remove('mostrar')
+
+
+        void indicadorSeek.offsetWidth
+
+
+        indicadorSeek.classList.add('mostrar')
+
+
+        // --------------------------------------
+        // COMEÇA A SUMIR
+        // --------------------------------------
+
+        timerSeek = setTimeout(() => {
+
+            indicadorSeek.classList.remove(
+                'mostrar'
+            )
+
+            indicadorSeek.classList.add(
+                'sumir'
+            )
+
+        }, 450)
+
+
+        // --------------------------------------
+        // LIMPA CLASSE
+        // --------------------------------------
+
+        setTimeout(() => {
+
+            indicadorSeek.classList.remove(
+                'sumir'
+            )
+
+        }, 750)
+
+    }
+
 
     // ==========================================
     // INDICADOR DE VOLUME
@@ -164,18 +265,16 @@ function inicializarVideo() {
 
             if (video.muted || porcentagem === 0) {
 
-                volumeIcone.textContent = '🔇'
+                volumeIcone.src = 'videos/volume-mute.png';
 
             } else if (porcentagem <= 50) {
 
-                volumeIcone.textContent = '🔉'
+                volumeIcone.src = 'videos/low-volume.png';
 
             } else {
 
-                volumeIcone.textContent = '🔊'
-
+                volumeIcone.src = 'videos/high-volume.png';
             }
-
         }
 
 
@@ -235,6 +334,8 @@ function inicializarVideo() {
             mostrarIndicador('❚❚')
 
         }
+
+        mostrarControlesTemporariamente()
 
     }
 
@@ -576,14 +677,14 @@ function inicializarVideo() {
                     video.currentTime - 5
                 )
 
-            return
+            mostrarIndicadorSeek('esquerda')
 
+            mostrarControlesTemporariamente()
+
+            return
         }
 
 
-        // --------------------------------------
-        // → = AVANÇAR 5 SEGUNDOS
-        // --------------------------------------
 
         if (e.key === 'ArrowRight') {
 
@@ -595,8 +696,11 @@ function inicializarVideo() {
                     video.currentTime + 5
                 )
 
-            return
+            mostrarIndicadorSeek('direita')
 
+            mostrarControlesTemporariamente()
+
+            return
         }
 
 
@@ -669,6 +773,43 @@ function inicializarVideo() {
             }, 3000)
 
         }
+
+    }
+
+    // ==========================================
+    // MOSTRAR CONTROLES TEMPORARIAMENTE
+    // ==========================================
+
+    function mostrarControlesTemporariamente() {
+
+        if (document.fullscreenElement !== player) return
+
+        controles.classList.remove(
+            'controles-escondidos'
+        )
+
+        player.classList.remove(
+            'cursor-escondido'
+        )
+
+        clearTimeout(timerControles)
+
+
+        timerControles = setTimeout(() => {
+
+            if (!mouseSobreControles) {
+
+                controles.classList.add(
+                    'controles-escondidos'
+                )
+
+                player.classList.add(
+                    'cursor-escondido'
+                )
+
+            }
+
+        }, 3000)
 
     }
 

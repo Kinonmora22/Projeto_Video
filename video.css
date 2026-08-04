@@ -37,7 +37,7 @@ VÍDEO
 
     border: solid 6px #300000;
 
-    box-sizing: border-box;
+
 
 }
 
@@ -231,6 +231,129 @@ INDICADOR PLAY / PAUSE
 
 }
 
+/* ==========================================
+INDICADOR DE AVANÇO / RETROCESSO
+========================================== */
+
+.indicador-seek {
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    position: absolute;
+
+    top: 270px;
+
+    transform:
+        translateY(-50%) scale(0.7);
+
+    width: 90px;
+    height: 90px;
+
+    border-radius: 50%;
+
+    background-color: rgba(0, 0, 0, 0.65);
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 38px;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    z-index: 15;
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+
+}
+
+
+/* ==========================================
+LADO ESQUERDO
+========================================== */
+
+.indicador-seek.esquerda {
+
+    left: 90px;
+
+}
+
+
+/* ==========================================
+LADO DIREITO
+========================================== */
+
+.indicador-seek.direita {
+
+    right: 90px;
+
+}
+
+
+/* ==========================================
+INDICADOR VISÍVEL
+========================================== */
+
+.indicador-seek.mostrar {
+
+    opacity: 1;
+
+    transform:
+        translateY(-50%) scale(1);
+
+}
+
+
+/* ==========================================
+INDICADOR SUMINDO
+========================================== */
+
+.indicador-seek.sumir {
+
+    opacity: 0;
+
+    transform:
+        translateY(-50%) scale(1.15);
+
+}
+
+
+/* ==========================================
+TELA CHEIA
+========================================== */
+
+.player:fullscreen .indicador-seek {
+
+    top: 50%;
+
+}
+
+
+/* ==========================================
+POSIÇÃO EM TELA CHEIA
+========================================== */
+
+.player:fullscreen .indicador-seek.esquerda {
+
+    left: 90px;
+
+}
+
+
+.player:fullscreen .indicador-seek.direita {
+
+    right: 90px;
+
+}
+
 .indicador-play-pause.mostrar {
     opacity: 1;
 
@@ -282,7 +405,7 @@ CÍRCULO ACHATADO
 
 .volume-circulo {
 
-    width: 150px;
+    width: 170px;
     height: 90px;
 
     border-radius: 45px;
@@ -305,16 +428,12 @@ CÍRCULO ACHATADO
 ========================================== */
 
 .volume-icone {
-
-    font-size: 34px;
-
-    line-height: 1;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
+    width: 34px;
+    /* Mantém o tamanho parecido com o do emoji antigo */
+    height: 34px;
+    object-fit: contain;
+    /* Evita que a sua imagem fique esticada ou distorcida */
+    display: block;
 }
 
 /* ==========================================
@@ -454,5 +573,21 @@ BOTÃO FULLSCREEN
 .player:fullscreen .fullscreen {
 
     cursor: pointer;
+
+
+}
+
+/* ==========================================
+ÍCONE DE AVANÇO / RETROCESSO
+========================================== */
+
+#iconeSeek {
+
+    width: 40px;
+    height: 40px;
+
+    object-fit: contain;
+
+    display: block;
 
 }
