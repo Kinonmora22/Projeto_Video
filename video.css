@@ -1,0 +1,458 @@
+body {
+    background-image: url('videos/cortina.jpg');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
+    margin: 0;
+
+}
+
+/* ==========================================
+PLAYER
+========================================== */
+
+.player {
+    width: 960px;
+
+    margin: 20px auto 0 auto;
+
+    position: relative;
+
+}
+
+/* ==========================================
+VÍDEO
+========================================== */
+
+.player video {
+    width: 960px;
+    height: 540px;
+
+    margin: 0;
+
+    display: block;
+
+    border: solid 6px #300000;
+
+    box-sizing: border-box;
+
+}
+
+/* ==========================================
+CONTROLES
+========================================== */
+
+.controles-container {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 960px;
+
+    margin: 30px auto 0 auto;
+
+    gap: 15px;
+
+}
+
+/* ==========================================
+BOTÕES
+========================================== */
+
+.btn-controle {
+    user-select: none;
+    -webkit-user-select: none;
+
+    width: 44px;
+    height: 44px;
+
+    border-radius: 50%;
+
+    background-image: url('videos/fundo.jpg');
+
+    border: solid 2px #7a3f3f;
+
+    color: #7a3f3f;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    transition:
+        transform 0.2s,
+        background-color 0.2s;
+
+}
+
+.btn-controle:hover {
+    background-color: #ffffff;
+
+    transform: scale(1.1);
+
+}
+
+/* ==========================================
+BARRA DE PROGRESSO
+========================================== */
+
+.progresso {
+    user-select: none;
+    -webkit-user-select: none;
+
+    flex-grow: 1;
+
+    height: 20px;
+
+    border-radius: 10px;
+
+    border: solid 3px #300000;
+
+    position: relative;
+
+    background-image: url('videos/fundo.jpg');
+
+}
+
+.progresso>div {
+    user-select: none;
+    -webkit-user-select: none;
+
+    border-color: rgb(146, 17, 17);
+
+    border-radius: 7px 0 7px 7px;
+
+    background-color: rgb(146, 17, 17);
+
+    font-family: Poppins;
+
+    color: white;
+
+    height: 100%;
+
+    display: flex;
+
+    justify-content: flex-end;
+    align-items: center;
+
+    font-size: 12px;
+
+    width: 0%;
+
+    overflow: hidden;
+
+    position: relative;
+
+    z-index: 1;
+
+}
+
+.progresso>div>span {
+    margin-right: 15px;
+
+    white-space: nowrap;
+
+}
+
+/* ==========================================
+PERSONAGEM
+========================================== */
+
+#personagem {
+    position: absolute;
+
+    bottom: 0;
+    left: 0%;
+
+    height: 40px;
+
+    transform: translateX(-50%);
+
+    pointer-events: none;
+
+    z-index: 10;
+
+    display: block;
+
+}
+
+/* ==========================================
+INDICADOR PLAY / PAUSE
+========================================== */
+
+.indicador-play-pause {
+    user-select: none;
+    -webkit-user-select: none;
+
+    position: absolute;
+
+    top: 270px;
+    left: 480px;
+
+    transform:
+        translate(-50%, -50%) scale(0.7);
+
+    width: 90px;
+    height: 90px;
+
+    border-radius: 50%;
+
+    background-color: rgba(0, 0, 0, 0.65);
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 38px;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    z-index: 15;
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+
+}
+
+.indicador-play-pause.mostrar {
+    opacity: 1;
+
+    transform:
+        translate(-50%, -50%) scale(1);
+
+}
+
+.indicador-play-pause.sumir {
+    opacity: 0;
+
+    transform:
+        translate(-50%, -50%) scale(1.15);
+
+}
+
+/* ==========================================
+INDICADOR DE VOLUME
+========================================== */
+
+.indicador-volume {
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    position: absolute;
+
+    top: 270px;
+    left: 480px;
+
+    transform:
+        translate(-50%, -50%) scale(0.7);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    z-index: 16;
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+
+}
+
+/* ==========================================
+CÍRCULO ACHATADO
+========================================== */
+
+.volume-circulo {
+
+    width: 150px;
+    height: 90px;
+
+    border-radius: 45px;
+
+    background-color: rgba(0, 0, 0, 0.65);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    position: relative;
+
+}
+
+/* ==========================================
+ÍCONE DE VOLUME
+========================================== */
+
+.volume-icone {
+
+    font-size: 34px;
+
+    line-height: 1;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+}
+
+/* ==========================================
+PORCENTAGEM
+========================================== */
+
+.volume-porcentagem {
+
+    color: white;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 22px;
+
+    font-weight: bold;
+
+    min-width: 55px;
+
+    text-align: center;
+
+}
+
+/* ==========================================
+ANIMAÇÃO DO INDICADOR DE VOLUME
+========================================== */
+
+.indicador-volume.mostrar {
+
+    opacity: 1;
+
+    transform:
+        translate(-50%, -50%) scale(1);
+
+}
+
+.indicador-volume.sumir {
+
+    opacity: 0;
+
+    transform:
+        translate(-50%, -50%) scale(1.15);
+
+}
+
+/* ==========================================
+TELA CHEIA
+========================================== */
+
+.player:fullscreen {
+
+    width: 100vw;
+    height: 100vh;
+
+    background-color: black;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+}
+
+.player:fullscreen video {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    border: none;
+
+}
+
+/* ==========================================
+INDICADORES EM TELA CHEIA
+========================================== */
+
+.player:fullscreen .indicador-play-pause,
+.player:fullscreen .indicador-volume {
+
+    top: 50%;
+    left: 50%;
+
+}
+
+/* ==========================================
+CONTROLES EM TELA CHEIA
+========================================== */
+
+.player:fullscreen .controles-container {
+
+    position: absolute;
+
+    left: 0;
+    bottom: 25px;
+
+    width: calc(100% - 50px);
+
+    margin: 0 25px;
+
+    z-index: 20;
+
+    opacity: 1;
+
+    visibility: visible;
+
+    transition:
+        opacity 0.5s ease,
+        visibility 0.5s ease;
+
+}
+
+.player:fullscreen .controles-container.controles-escondidos {
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+}
+
+/* ==========================================
+CURSOR EM TELA CHEIA
+========================================== */
+
+.player:fullscreen.cursor-escondido {
+
+    cursor: none;
+
+}
+
+/* ==========================================
+BOTÃO FULLSCREEN
+========================================== */
+
+.player:fullscreen .fullscreen {
+
+    cursor: pointer;
+
+}
