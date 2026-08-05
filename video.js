@@ -26,6 +26,8 @@ fetch('video.html')
 
 function inicializarVideo() {
 
+    const indicadorLoading =
+        conteudo.querySelector('#indicadorLoading')
 
     const video =
         conteudo.querySelector('#meuVideo')
@@ -80,11 +82,29 @@ function inicializarVideo() {
 
     let timerVolume
 
+    let timerLimpezaVolume
+
     let timerControles
 
     let mouseSobreControles = false
 
     let ultimoVolume = 1
+
+    let seekEmAndamento = false
+
+    let tempoSeekDesejado = null
+
+    let frameSeek = null
+
+    let timerLoadingSeek = null
+
+    let timerRecuperacaoSeek = null
+
+    let recuperandoSeek = false
+
+    let tentativasRecuperacaoSeek = 0
+
+    let reproduzirAposRecuperacao = false
 
 
     // ==========================================
@@ -93,6 +113,226 @@ function inicializarVideo() {
 
     video.oncontextmenu = () => false
 
+    // ==========================================
+    // INDICADOR DE CARREGAMENTO
+    // ==========================================
+
+    function mostrarLoading() {
+
+        if (!indicadorLoading) return
+
+        indicadorLoading.classList.add('mostrar')
+
+    }
+
+
+    // ==========================================
+    // ESCONDER LOADING
+    // ==========================================
+
+    function esconderLoading() {
+
+        if (!indicadorLoading) return
+
+        clearTimeout(timerLoadingSeek)
+
+        clearTimeout(timerRecuperacaoSeek)
+
+        indicadorLoading.classList.remove('mostrar')
+
+    }
+
+
+    function mostrarLoadingSeek() {
+
+        clearTimeout(timerLoadingSeek)
+
+        timerLoadingSeek = setTimeout(() => {
+
+            if (seekEmAndamento || video.seeking) {
+
+                mostrarLoading()
+
+            }
+
+        }, 120)
+
+    }
+
+
+    function concluirSeek() {
+
+        seekEmAndamento = false
+
+        tempoSeekDesejado = null
+
+        recuperandoSeek = false
+
+        tentativasRecuperacaoSeek = 0
+
+        esconderLoading()
+
+    }
+
+
+    function agendarRecuperacaoSeek() {
+
+        clearTimeout(timerRecuperacaoSeek)
+
+        if (
+            !seekEmAndamento ||
+            recuperandoSeek ||
+            tentativasRecuperacaoSeek >= 1
+        ) {
+
+            return
+
+        }
+
+
+        timerRecuperacaoSeek = setTimeout(() => {
+
+            const semDadosParaReproduzir =
+                video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA
+
+
+            if (
+                !seekEmAndamento ||
+                recuperandoSeek ||
+                !semDadosParaReproduzir
+            ) {
+
+                return
+
+            }
+
+
+            recuperandoSeek = true
+
+            tentativasRecuperacaoSeek++
+
+            reproduzirAposRecuperacao = !video.paused
+
+            video.load()
+
+        }, 3000)
+
+    }
+
+
+    // ==========================================
+    // VERIFICA SE O PONTO ESTÁ NO BUFFER
+    // ==========================================
+
+
+
+    // ==========================================
+    // AGUARDA O PONTO DO SEEK CARREGAR
+    // ==========================================
+
+
+
+    // ==========================================
+    // EVENTOS DE CARREGAMENTO
+    // ==========================================
+
+    video.addEventListener('waiting', () => {
+
+        if (seekEmAndamento) {
+
+            mostrarLoading()
+
+            agendarRecuperacaoSeek()
+
+        }
+
+    })
+
+
+    video.addEventListener('stalled', () => {
+
+        if (seekEmAndamento) {
+
+            mostrarLoading()
+
+            agendarRecuperacaoSeek()
+
+        }
+
+    })
+
+
+    video.addEventListener('seeking', () => {
+
+        mostrarLoadingSeek()
+
+        agendarRecuperacaoSeek()
+
+    })
+
+
+    video.addEventListener('seeked', () => {
+
+        if (seekEmAndamento) {
+
+            agendarRecuperacaoSeek()
+
+        }
+
+    })
+
+
+    video.addEventListener('canplay', () => {
+
+        // Se estiver pausado e não estiver mais
+        // procurando um novo ponto, já está pronto.
+
+        if (seekEmAndamento && !video.seeking) {
+
+            concluirSeek()
+
+        } else if (video.paused) {
+
+            esconderLoading()
+
+        }
+
+    })
+
+
+    video.addEventListener('playing', () => {
+
+        // Quando realmente começar a reproduzir,
+        // significa que o trecho solicitado está pronto.
+
+        concluirSeek()
+
+    })
+
+
+    video.addEventListener('loadedmetadata', () => {
+
+        if (!recuperandoSeek || tempoSeekDesejado === null) {
+
+            return
+
+        }
+
+
+        video.currentTime = tempoSeekDesejado
+
+        recuperandoSeek = false
+
+        agendarRecuperacaoSeek()
+
+
+        if (reproduzirAposRecuperacao) {
+
+            video.play().catch(() => { })
+
+        }
+
+    })
 
     // ==========================================
     // INDICADOR PLAY / PAUSE
@@ -120,12 +360,16 @@ function inicializarVideo() {
 
         indicadorPlayPause.classList.add('mostrar')
 
+        atualizarPosicaoIndicadorVolume()
+
 
         timerIndicador = setTimeout(() => {
 
             indicadorPlayPause.classList.remove('mostrar')
 
             indicadorPlayPause.classList.add('sumir')
+
+            atualizarPosicaoIndicadorVolume()
 
         }, 450)
 
@@ -137,10 +381,6 @@ function inicializarVideo() {
         }, 750)
 
     }
-
-    // ==========================================
-    // INDICADOR DE AVANÇO / RETROCESSO
-    // ==========================================
 
     // ==========================================
     // INDICADOR DE AVANÇO / RETROCESSO
@@ -236,83 +476,145 @@ function inicializarVideo() {
     // INDICADOR DE VOLUME
     // ==========================================
 
+    function atualizarPosicaoIndicadorVolume() {
+
+        if (!indicadorVolume) return
+
+
+        const playPauseVisivel =
+            indicadorPlayPause &&
+            indicadorPlayPause.classList.contains('mostrar')
+
+
+        indicadorVolume.classList.toggle(
+            'acima-pause',
+            playPauseVisivel
+        )
+
+    }
+
+
     function mostrarIndicadorVolume() {
 
         if (!indicadorVolume) return
 
 
+        // ==========================================
+        // PORCENTAGEM
+        // ==========================================
+
         const porcentagem =
             Math.round(video.volume * 100)
 
 
-        // ------------------------------
-        // PORCENTAGEM
-        // ------------------------------
-
         if (volumePorcentagem) {
 
             volumePorcentagem.textContent =
-                `${porcentagem}% `
+                `${porcentagem}%`
 
         }
 
 
-        // ------------------------------
+        // ==========================================
         // ÍCONE
-        // ------------------------------
+        // ==========================================
 
         if (volumeIcone) {
 
             if (video.muted || porcentagem === 0) {
 
-                volumeIcone.src = 'videos/volume-mute.png';
+                volumeIcone.src =
+                    'videos/volume-mute.png'
 
             } else if (porcentagem <= 50) {
 
-                volumeIcone.src = 'videos/low-volume.png';
+                volumeIcone.src =
+                    'videos/low-volume.png'
 
             } else {
 
-                volumeIcone.src = 'videos/high-volume.png';
+                volumeIcone.src =
+                    'videos/high-volume.png'
+
             }
+
         }
 
 
-        // ------------------------------
-        // ANIMAÇÃO
-        // ------------------------------
+        // ==========================================
+        // LIMPA ESTADOS ANTERIORES
+        // ==========================================
 
         clearTimeout(timerVolume)
 
+        clearTimeout(timerLimpezaVolume)
 
-        indicadorVolume.classList.remove('sumir')
+        indicadorVolume.classList.remove(
+            'mostrar',
+            'sumir'
+        )
 
-        indicadorVolume.classList.remove('mostrar')
+
+        // ==========================================
+        // POSIÇÃO
+        // ==========================================
+
+        atualizarPosicaoIndicadorVolume()
 
 
-        // Força reinício da animação
+        // ==========================================
+        // REINICIA ANIMAÇÃO
+        // ==========================================
+
         void indicadorVolume.offsetWidth
 
 
-        indicadorVolume.classList.add('mostrar')
+        // ==========================================
+        // MOSTRA
+        // ==========================================
 
+        indicadorVolume.classList.add(
+            'mostrar'
+        )
+
+
+        // ==========================================
+        // DESAPARECE
+        // ==========================================
 
         timerVolume = setTimeout(() => {
 
-            indicadorVolume.classList.remove('mostrar')
+            indicadorVolume.classList.remove(
+                'mostrar'
+            )
 
-            indicadorVolume.classList.add('sumir')
+            indicadorVolume.classList.add(
+                'sumir'
+            )
 
         }, 700)
 
 
-        setTimeout(() => {
+        // ==========================================
+        // LIMPA
+        // ==========================================
 
-            indicadorVolume.classList.remove('sumir')
+        timerLimpezaVolume = setTimeout(() => {
+
+            indicadorVolume.classList.remove(
+                'sumir',
+                'acima-pause'
+            )
 
         }, 1000)
 
     }
+
+
+
+    // ==========================================
+    // PLAY / PAUSE
+    // ==========================================
 
 
     // ==========================================
@@ -338,6 +640,7 @@ function inicializarVideo() {
         mostrarControlesTemporariamente()
 
     }
+
 
 
     // ==========================================
@@ -577,6 +880,92 @@ function inicializarVideo() {
 
     }
 
+    function realizarSeek(direcao) {
+
+        // ==========================================
+        // VERIFICA DURAÇÃO
+        // ==========================================
+
+        if (
+            !video.duration ||
+            !isFinite(video.duration)
+        ) {
+
+            return false
+
+        }
+
+
+        let novoTempo
+
+        const tempoBase =
+            tempoSeekDesejado !== null
+                ? tempoSeekDesejado
+                : video.currentTime
+
+
+        if (direcao === 'direita') {
+
+            novoTempo =
+                Math.min(
+                    video.duration,
+                    tempoBase + 5
+                )
+
+        } else {
+
+            novoTempo =
+                Math.max(
+                    0,
+                    tempoBase - 5
+                )
+
+        }
+
+
+        // ==========================================
+        // ACEITOU O SEEK
+        // ==========================================
+
+        seekEmAndamento = true
+
+        tempoSeekDesejado = novoTempo
+
+        recuperandoSeek = false
+
+        tentativasRecuperacaoSeek = 0
+
+        // ==========================================
+        // MOSTRA LOADING SOMENTE SE DEMORAR
+        // ==========================================
+
+        mostrarLoadingSeek()
+
+
+        // ==========================================
+        // FAZ O SEEK MAIS RECENTE
+        // ==========================================
+
+        if (frameSeek) {
+
+            cancelAnimationFrame(frameSeek)
+
+        }
+
+
+        frameSeek = requestAnimationFrame(() => {
+
+            frameSeek = null
+
+            video.currentTime = tempoSeekDesejado
+
+            agendarRecuperacaoSeek()
+
+        })
+
+        return true
+
+    }
 
     // ==========================================
     // TECLADO
@@ -584,7 +973,9 @@ function inicializarVideo() {
 
     document.addEventListener('keydown', (e) => {
 
-        if (e.repeat) return
+        const teclaSeek =
+            e.key === 'ArrowLeft' ||
+            e.key === 'ArrowRight'
 
 
         // --------------------------------------
@@ -601,6 +992,13 @@ function inicializarVideo() {
 
 
         if (digitando) return
+
+
+        if (e.repeat && !teclaSeek) {
+
+            return
+
+        }
 
 
         // --------------------------------------
@@ -671,17 +1069,22 @@ function inicializarVideo() {
 
             e.preventDefault()
 
-            video.currentTime =
-                Math.max(
-                    0,
-                    video.currentTime - 5
-                )
 
-            mostrarIndicadorSeek('esquerda')
+            const realizou =
+                realizarSeek('esquerda')
 
-            mostrarControlesTemporariamente()
+
+            if (realizou) {
+
+                mostrarIndicadorSeek('esquerda')
+
+                mostrarControlesTemporariamente()
+
+            }
+
 
             return
+
         }
 
 
@@ -690,17 +1093,22 @@ function inicializarVideo() {
 
             e.preventDefault()
 
-            video.currentTime =
-                Math.min(
-                    video.duration || Infinity,
-                    video.currentTime + 5
-                )
 
-            mostrarIndicadorSeek('direita')
+            const realizou =
+                realizarSeek('direita')
 
-            mostrarControlesTemporariamente()
+
+            if (realizou) {
+
+                mostrarIndicadorSeek('direita')
+
+                mostrarControlesTemporariamente()
+
+            }
+
 
             return
+
         }
 
 
@@ -911,7 +1319,7 @@ function inicializarVideo() {
                 `${percentual}% `
 
             progressoDiv.innerHTML =
-                `<span span > ${Math.floor(percentual)}%</span > `
+                `<span>${Math.floor(percentual)}%</span>`
 
         }
 

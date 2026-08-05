@@ -192,13 +192,14 @@ INDICADOR PLAY / PAUSE
 ========================================== */
 
 .indicador-play-pause {
+
     user-select: none;
     -webkit-user-select: none;
 
     position: absolute;
 
-    top: 270px;
-    left: 480px;
+    top: 50%;
+    left: 50%;
 
     transform:
         translate(-50%, -50%) scale(0.7);
@@ -381,8 +382,8 @@ INDICADOR DE VOLUME
 
     position: absolute;
 
-    top: 270px;
-    left: 480px;
+    top: 50%;
+    left: 50%;
 
     transform:
         translate(-50%, -50%) scale(0.7);
@@ -398,6 +399,7 @@ INDICADOR DE VOLUME
         transform 0.25s ease;
 
 }
+
 
 /* ==========================================
 CÍRCULO ACHATADO
@@ -423,18 +425,22 @@ CÍRCULO ACHATADO
 
 }
 
+
 /* ==========================================
 ÍCONE DE VOLUME
 ========================================== */
 
 .volume-icone {
+
     width: 34px;
-    /* Mantém o tamanho parecido com o do emoji antigo */
     height: 34px;
+
     object-fit: contain;
-    /* Evita que a sua imagem fique esticada ou distorcida */
+
     display: block;
+
 }
+
 
 /* ==========================================
 PORCENTAGEM
@@ -456,8 +462,9 @@ PORCENTAGEM
 
 }
 
+
 /* ==========================================
-ANIMAÇÃO DO INDICADOR DE VOLUME
+VOLUME VISÍVEL
 ========================================== */
 
 .indicador-volume.mostrar {
@@ -469,12 +476,59 @@ ANIMAÇÃO DO INDICADOR DE VOLUME
 
 }
 
+
+/* ==========================================
+VOLUME SUMINDO NORMALMENTE
+========================================== */
+
 .indicador-volume.sumir {
 
     opacity: 0;
 
     transform:
         translate(-50%, -50%) scale(1.15);
+
+}
+
+
+/* ==========================================
+VOLUME ACIMA DO PLAY / PAUSE
+========================================== */
+
+.indicador-volume.acima-pause {
+
+    transform:
+        translate(-50%, calc(-50% - 105px)) scale(0.7);
+
+}
+
+.indicador-volume.acima-pause.mostrar {
+
+    opacity: 1;
+
+    transform:
+        translate(-50%, calc(-50% - 105px)) scale(1);
+
+}
+
+.indicador-volume.acima-pause.sumir {
+
+    opacity: 0;
+
+    transform:
+        translate(-50%, calc(-50% - 145px)) scale(0.85);
+
+}
+
+
+/* ==========================================
+TELA CHEIA
+========================================== */
+
+.player:fullscreen .indicador-volume {
+
+    top: 50%;
+    left: 50%;
 
 }
 
@@ -511,13 +565,7 @@ TELA CHEIA
 INDICADORES EM TELA CHEIA
 ========================================== */
 
-.player:fullscreen .indicador-play-pause,
-.player:fullscreen .indicador-volume {
 
-    top: 50%;
-    left: 50%;
-
-}
 
 /* ==========================================
 CONTROLES EM TELA CHEIA
@@ -589,5 +637,113 @@ BOTÃO FULLSCREEN
     object-fit: contain;
 
     display: block;
+
+}
+
+/* ==========================================
+INDICADOR DE CARREGAMENTO
+========================================== */
+
+.indicador-loading {
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    position: absolute;
+
+    top: 270px;
+    left: 480px;
+
+    transform:
+        translate(-50%, -50%);
+
+    width: 80px;
+    height: 80px;
+
+    border-radius: 50%;
+
+    background-color: rgba(0, 0, 0, 0.65);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    z-index: 30;
+
+    transition:
+        opacity 0.2s ease;
+
+}
+
+
+/* ==========================================
+ÍCONE DE LOADING
+========================================== */
+
+.indicador-loading img {
+
+    width: 45px;
+    height: 45px;
+
+    object-fit: contain;
+
+    display: block;
+
+}
+
+
+/* ==========================================
+LOADING VISÍVEL
+========================================== */
+
+.indicador-loading.mostrar {
+
+    opacity: 1;
+
+}
+
+
+/* ==========================================
+ANIMAÇÃO DO LOADING
+========================================== */
+
+.indicador-loading.mostrar img {
+
+    animation:
+        girarLoading 1s linear infinite;
+
+}
+
+
+@keyframes girarLoading {
+
+    from {
+
+        transform: rotate(0deg);
+
+    }
+
+    to {
+
+        transform: rotate(360deg);
+
+    }
+
+}
+
+
+/* ==========================================
+TELA CHEIA
+========================================== */
+
+.player:fullscreen .indicador-loading {
+
+    top: 50%;
+    left: 50%;
 
 }
