@@ -1,12 +1,50 @@
 body {
+    --area-virtual-largura: min(100vw, 1920px);
+    --area-virtual-altura: min(100vh, 1080px);
+    --margem-virtual-x: max(0px, calc((100vw - var(--area-virtual-largura)) / 2));
+    --margem-virtual-y: max(0px, calc((100vh - var(--area-virtual-altura)) / 2));
+    --inicio-gradiente-x: max(0px, calc(var(--margem-virtual-x) - 160px));
+    --inicio-gradiente-y: max(0px, calc(var(--margem-virtual-y) - 160px));
+
     background-image: url('videos/cortina.jpg');
 
-    background-size: cover;
+    background-size:
+        var(--area-virtual-largura) var(--area-virtual-altura);
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
+    background-color: black;
 
     margin: 0;
+
+}
+
+body::before {
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        linear-gradient(to right,
+            rgba(0, 0, 0, 0.85) 0,
+            rgba(0, 0, 0, 0.85) var(--inicio-gradiente-x),
+            transparent var(--margem-virtual-x),
+            transparent calc(100vw - var(--margem-virtual-x)),
+            rgba(0, 0, 0, 0.85) calc(100vw - var(--inicio-gradiente-x)),
+            rgba(0, 0, 0, 0.85) 100%),
+        linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.85) 0,
+            rgba(0, 0, 0, 0.85) var(--inicio-gradiente-y),
+            transparent var(--margem-virtual-y),
+            transparent calc(100vh - var(--margem-virtual-y)),
+            rgba(0, 0, 0, 0.85) calc(100vh - var(--inicio-gradiente-y)),
+            rgba(0, 0, 0, 0.85) 100%);
+
+    pointer-events: none;
+
+    z-index: 35;
 
 }
 
@@ -35,7 +73,10 @@ VÍDEO
 
     display: block;
 
-    border: solid 6px #300000;
+
+
+    box-shadow:
+        0 0 0 6px #300000;
 
 
 
@@ -123,9 +164,13 @@ BARRA DE PROGRESSO
 
     background-image: url('videos/fundo.jpg');
 
+    cursor: pointer;
+
+    touch-action: none;
+
 }
 
-.progresso>div {
+.progresso>.barra-vermelha {
     user-select: none;
     -webkit-user-select: none;
 
@@ -154,14 +199,60 @@ BARRA DE PROGRESSO
 
     position: relative;
 
+    z-index: 3;
+
+}
+
+.progresso>.barra-buffer {
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 0%;
+    height: 100%;
+
+    border-radius: 7px;
+
+    background: rgba(255, 255, 255, .2);
+
+    pointer-events: none;
+
     z-index: 1;
 
 }
 
-.progresso>div>span {
+.progresso>.barra-vermelha>span {
     margin-right: 15px;
 
     white-space: nowrap;
+
+}
+
+.progresso::after {
+    content: attr(data-tempo-total);
+
+    position: absolute;
+
+    top: 50%;
+    right: 15px;
+
+    transform:
+        translateY(-50%);
+
+    font-family: Poppins;
+
+    color: white;
+
+    opacity: 0.8;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+
+    z-index: 2;
 
 }
 
@@ -198,14 +289,14 @@ INDICADOR PLAY / PAUSE
 
     position: absolute;
 
-    top: 50%;
-    left: 50%;
+    top: var(--centro-video-y, 50%);
+    left: var(--centro-video-x, 50%);
 
     transform:
         translate(-50%, -50%) scale(0.7);
 
-    width: 90px;
-    height: 90px;
+    width: calc(90px * var(--escala-indicadores, 1));
+    height: calc(90px * var(--escala-indicadores, 1));
 
     border-radius: 50%;
 
@@ -218,7 +309,7 @@ INDICADOR PLAY / PAUSE
     align-items: center;
     justify-content: center;
 
-    font-size: 38px;
+    font-size: calc(38px * var(--escala-indicadores, 1));
 
     pointer-events: none;
 
@@ -248,8 +339,8 @@ INDICADOR DE AVANÇO / RETROCESSO
     transform:
         translateY(-50%) scale(0.7);
 
-    width: 90px;
-    height: 90px;
+    width: calc(90px * var(--escala-indicadores, 1));
+    height: calc(90px * var(--escala-indicadores, 1));
 
     border-radius: 50%;
 
@@ -262,7 +353,7 @@ INDICADOR DE AVANÇO / RETROCESSO
     align-items: center;
     justify-content: center;
 
-    font-size: 38px;
+    font-size: calc(38px * var(--escala-indicadores, 1));
 
     pointer-events: none;
 
@@ -382,8 +473,8 @@ INDICADOR DE VOLUME
 
     position: absolute;
 
-    top: 50%;
-    left: 50%;
+    top: var(--centro-video-y, 50%);
+    left: var(--centro-video-x, 50%);
 
     transform:
         translate(-50%, -50%) scale(0.7);
@@ -407,10 +498,10 @@ CÍRCULO ACHATADO
 
 .volume-circulo {
 
-    width: 170px;
-    height: 90px;
+    width: calc(170px * var(--escala-indicadores, 1));
+    height: calc(90px * var(--escala-indicadores, 1));
 
-    border-radius: 45px;
+    border-radius: calc(45px * var(--escala-indicadores, 1));
 
     background-color: rgba(0, 0, 0, 0.65);
 
@@ -419,7 +510,7 @@ CÍRCULO ACHATADO
     align-items: center;
     justify-content: center;
 
-    gap: 10px;
+    gap: calc(10px * var(--escala-indicadores, 1));
 
     position: relative;
 
@@ -432,8 +523,8 @@ CÍRCULO ACHATADO
 
 .volume-icone {
 
-    width: 34px;
-    height: 34px;
+    width: calc(34px * var(--escala-indicadores, 1));
+    height: calc(34px * var(--escala-indicadores, 1));
 
     object-fit: contain;
 
@@ -452,11 +543,11 @@ PORCENTAGEM
 
     font-family: Arial, sans-serif;
 
-    font-size: 22px;
+    font-size: calc(22px * var(--escala-indicadores, 1));
 
     font-weight: bold;
 
-    min-width: 55px;
+    min-width: calc(55px * var(--escala-indicadores, 1));
 
     text-align: center;
 
@@ -498,7 +589,7 @@ VOLUME ACIMA DO PLAY / PAUSE
 .indicador-volume.acima-pause {
 
     transform:
-        translate(-50%, calc(-50% - 105px)) scale(0.7);
+        translate(-50%, calc(-50% - (105px * var(--escala-indicadores, 1)))) scale(0.7);
 
 }
 
@@ -507,7 +598,7 @@ VOLUME ACIMA DO PLAY / PAUSE
     opacity: 1;
 
     transform:
-        translate(-50%, calc(-50% - 105px)) scale(1);
+        translate(-50%, calc(-50% - (105px * var(--escala-indicadores, 1)))) scale(1);
 
 }
 
@@ -516,7 +607,7 @@ VOLUME ACIMA DO PLAY / PAUSE
     opacity: 0;
 
     transform:
-        translate(-50%, calc(-50% - 145px)) scale(0.85);
+        translate(-50%, calc(-50% - (145px * var(--escala-indicadores, 1)))) scale(0.85);
 
 }
 
@@ -557,7 +648,8 @@ TELA CHEIA
 
     object-fit: contain;
 
-    border: none;
+    box-shadow:
+        none;
 
 }
 
@@ -631,8 +723,8 @@ BOTÃO FULLSCREEN
 
 #iconeSeek {
 
-    width: 40px;
-    height: 40px;
+    width: calc(40px * var(--escala-indicadores, 1));
+    height: calc(40px * var(--escala-indicadores, 1));
 
     object-fit: contain;
 
@@ -651,14 +743,14 @@ INDICADOR DE CARREGAMENTO
 
     position: absolute;
 
-    top: 270px;
-    left: 480px;
+    top: var(--centro-video-y, 270px);
+    left: var(--centro-video-x, 480px);
 
     transform:
         translate(-50%, -50%);
 
-    width: 80px;
-    height: 80px;
+    width: calc(80px * var(--escala-indicadores, 1));
+    height: calc(80px * var(--escala-indicadores, 1));
 
     border-radius: 50%;
 
@@ -687,8 +779,8 @@ INDICADOR DE CARREGAMENTO
 
 .indicador-loading img {
 
-    width: 45px;
-    height: 45px;
+    width: calc(45px * var(--escala-indicadores, 1));
+    height: calc(45px * var(--escala-indicadores, 1));
 
     object-fit: contain;
 
@@ -745,5 +837,155 @@ TELA CHEIA
 
     top: 50%;
     left: 50%;
+
+}
+
+/* ==========================================
+CONTROLE DE VOLUME EXTERNO
+========================================== */
+
+.controle-volume-externo {
+
+    position: fixed;
+
+    bottom: var(--margem-virtual-y);
+
+    z-index: 40;
+
+    height: 350px;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+}
+
+.speaker-esquerdo {
+
+    left: var(--margem-virtual-x);
+
+}
+
+.speaker-direito {
+
+    right: var(--margem-virtual-x);
+
+}
+
+.speaker-volume-imagem {
+
+    height: 350px;
+
+    display: block;
+
+    cursor: pointer;
+
+}
+
+.barra-volume-externa {
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 330px;
+
+    width: 52px;
+    height: 170px;
+
+    padding: 18px 0;
+
+    border-radius: 28px;
+
+    background-color: rgba(0, 0, 0, 0.68);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transform:
+        translate(-50%, 18px) scale(0.88);
+
+    transform-origin: center bottom;
+
+    transition:
+        opacity 0.22s ease,
+        transform 0.22s ease;
+
+}
+
+.controle-volume-externo.volume-aberto .barra-volume-externa {
+
+    opacity: 1;
+
+    pointer-events: auto;
+
+    transform:
+        translate(-50%, 0) scale(1);
+
+}
+
+.trilho-volume-externo {
+
+    position: relative;
+
+    width: 10px;
+    height: 130px;
+
+    border-radius: 999px;
+
+    background-color: rgba(255, 255, 255, 0.28);
+
+    cursor: pointer;
+
+}
+
+.preenchimento-volume-externo {
+
+    position: absolute;
+
+    left: 0;
+    bottom: 0;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 999px;
+
+    background-color: #b31b1b;
+
+}
+
+.thumb-volume-externo {
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 100%;
+
+    width: 22px;
+    height: 22px;
+
+    border-radius: 50%;
+
+    background-color: #ffffff;
+
+    border: solid 3px #7a3f3f;
+
+    transform:
+        translate(-50%, 50%);
+
+    box-sizing: border-box;
+
+    pointer-events: none;
+
+}
+
+body.volume-externo-escondido .controle-volume-externo {
+
+    display: none;
 
 }

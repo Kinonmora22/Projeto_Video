@@ -65,8 +65,14 @@ function inicializarVideo() {
     const btnFullscreen =
         conteudo.querySelector('[wm-fullscreen]')
 
+    const progresso =
+        conteudo.querySelector('[wm-progresso]')
+
     const progressoDiv =
         conteudo.querySelector('[wm-progresso] > div')
+
+    const controlesVolumeExternos =
+        conteudo.querySelectorAll('[data-speaker-volume]')
 
 
     if (!video) return
@@ -88,6 +94,10 @@ function inicializarVideo() {
 
     let mouseSobreControles = false
 
+    let barraVolumeAberta = null
+
+    let arrastandoVolume = false
+
     let ultimoVolume = 1
 
     let seekEmAndamento = false
@@ -106,6 +116,236 @@ function inicializarVideo() {
 
     let reproduzirAposRecuperacao = false
 
+    let reproduzirAposLoading = false
+
+    let arrastandoProgresso = false
+
+    let percentualProgressoArraste = 0
+
+
+    const progressoBuffer =
+        document.createElement('div')
+
+    progressoBuffer.className = 'barra-buffer'
+
+    if (progresso && progressoDiv) {
+
+        progresso.insertBefore(
+            progressoBuffer,
+            progressoDiv
+        )
+
+    }
+
+
+    function loadingVisivel() {
+
+        return (
+            indicadorLoading &&
+            indicadorLoading.classList.contains('mostrar')
+        )
+
+    }
+
+
+    function atualizarCentroVideoIndicadores() {
+
+        if (!video || !player) return
+
+
+        const limitesVideo =
+            video.getBoundingClientRect()
+
+        const limitesPlayer =
+            player.getBoundingClientRect()
+
+        const escalaIndicadores =
+            document.fullscreenElement === player
+                ? 1.2
+                : Math.min(
+                    1.2,
+                    (limitesVideo.width / window.innerWidth) * 1.2,
+                    (limitesVideo.height / window.innerHeight) * 1.2
+                )
+
+
+        player.style.setProperty(
+            '--centro-video-x',
+            `${limitesVideo.left - limitesPlayer.left + limitesVideo.width / 2}px`
+        )
+
+        player.style.setProperty(
+            '--centro-video-y',
+            `${limitesVideo.top - limitesPlayer.top + limitesVideo.height / 2}px`
+        )
+
+        player.style.setProperty(
+            '--escala-indicadores',
+            escalaIndicadores
+        )
+
+    }
+
+
+    function esconderIndicadorPlayPauseImediatamente() {
+
+        if (!indicadorPlayPause) return
+
+
+        clearTimeout(timerIndicador)
+
+        indicadorPlayPause.style.transition = 'none'
+
+        indicadorPlayPause.classList.remove(
+            'mostrar',
+            'sumir'
+        )
+
+        void indicadorPlayPause.offsetWidth
+
+        indicadorPlayPause.style.transition = ''
+
+        atualizarPosicaoIndicadorVolume()
+
+    }
+
+
+    atualizarCentroVideoIndicadores()
+
+    window.addEventListener(
+        'resize',
+        atualizarCentroVideoIndicadores
+    )
+
+    if ('ResizeObserver' in window) {
+
+        const observerVideo =
+            new ResizeObserver(atualizarCentroVideoIndicadores)
+
+        observerVideo.observe(video)
+
+    }
+
+
+    function formatarTempo(segundos) {
+
+        segundos =
+            Math.max(0, Math.floor(segundos || 0))
+
+        const horas =
+            Math.floor(segundos / 3600)
+
+        const minutos =
+            Math.floor((segundos % 3600) / 60)
+
+        const segundosRestantes =
+            segundos % 60
+
+
+        if (horas > 0) {
+
+            return `${horas}:${String(minutos).padStart(2, '0')}:${String(segundosRestantes).padStart(2, '0')}`
+
+        }
+
+
+        return `${String(minutos).padStart(2, '0')}:${String(segundosRestantes).padStart(2, '0')}`
+
+    }
+
+
+    function obterPercentualProgressoPeloPonteiro(e) {
+
+        if (!progresso) return 0
+
+
+        const limites =
+            progresso.getBoundingClientRect()
+
+        const posicao =
+            (e.clientX - limites.left) / limites.width
+
+
+        return Math.max(
+            0,
+            Math.min(1, posicao)
+        )
+
+    }
+
+
+    function atualizarVisualProgresso(percentual) {
+
+        if (!video.duration) return
+
+
+        const tempo =
+            video.duration * percentual
+
+        const tempoAtual =
+            formatarTempo(tempo)
+
+        const tempoTotal =
+            formatarTempo(video.duration)
+
+
+        if (progressoDiv) {
+
+            progressoDiv.style.width =
+                `${percentual * 100}% `
+
+            progressoDiv.parentElement.dataset.tempoTotal =
+                tempoTotal
+
+            progressoDiv.innerHTML =
+                `<span>${tempoAtual}</span>`
+
+        }
+
+
+        if (personagem) {
+
+            personagem.style.left =
+                `${percentual * 100}% `
+
+        }
+
+    }
+
+
+    function atualizarBarraBuffer() {
+
+        if (
+            !progressoBuffer ||
+            !video.duration ||
+            !isFinite(video.duration)
+        ) {
+
+            return
+
+        }
+
+
+        let fimBuffer =
+            0
+
+
+        for (let i = 0; i < video.buffered.length; i++) {
+
+            fimBuffer =
+                Math.max(
+                    fimBuffer,
+                    video.buffered.end(i)
+                )
+
+        }
+
+
+        progressoBuffer.style.width =
+            `${Math.min(100, (fimBuffer / video.duration) * 100)}%`
+
+    }
+
 
     // ==========================================
     // DESATIVA MENU DE CONTEXTO
@@ -121,7 +361,25 @@ function inicializarVideo() {
 
         if (!indicadorLoading) return
 
+        esconderIndicadorPlayPauseImediatamente()
+
+        if (!video.paused) {
+
+            reproduzirAposLoading = true
+
+        }
+
+
+        if (personagem && (reproduzirAposLoading || !video.paused)) {
+
+            personagem.src =
+                'videos/parado.png'
+
+        }
+
         indicadorLoading.classList.add('mostrar')
+
+        atualizarPosicaoIndicadorVolume()
 
     }
 
@@ -139,6 +397,23 @@ function inicializarVideo() {
         clearTimeout(timerRecuperacaoSeek)
 
         indicadorLoading.classList.remove('mostrar')
+
+        if (reproduzirAposLoading && video.paused) {
+
+            video.play().catch(() => { })
+
+        }
+
+        if (personagem && (reproduzirAposLoading || !video.paused)) {
+
+            personagem.src =
+                'videos/andando.gif'
+
+        }
+
+        reproduzirAposLoading = false
+
+        atualizarPosicaoIndicadorVolume()
 
     }
 
@@ -211,7 +486,9 @@ function inicializarVideo() {
 
             tentativasRecuperacaoSeek++
 
-            reproduzirAposRecuperacao = !video.paused
+            reproduzirAposRecuperacao =
+                reproduzirAposLoading ||
+                !video.paused
 
             video.load()
 
@@ -312,6 +589,17 @@ function inicializarVideo() {
 
     video.addEventListener('loadedmetadata', () => {
 
+        atualizarCentroVideoIndicadores()
+
+        atualizarBarraBuffer()
+
+        if (progressoDiv) {
+
+            progressoDiv.parentElement.dataset.tempoTotal =
+                formatarTempo(video.duration)
+
+        }
+
         if (!recuperandoSeek || tempoSeekDesejado === null) {
 
             return
@@ -334,6 +622,24 @@ function inicializarVideo() {
 
     })
 
+
+    video.addEventListener(
+        'progress',
+        atualizarBarraBuffer
+    )
+
+
+    video.addEventListener(
+        'durationchange',
+        atualizarBarraBuffer
+    )
+
+
+    video.addEventListener(
+        'canplay',
+        atualizarBarraBuffer
+    )
+
     // ==========================================
     // INDICADOR PLAY / PAUSE
     // ==========================================
@@ -341,6 +647,8 @@ function inicializarVideo() {
     function mostrarIndicador(icone) {
 
         if (!indicadorPlayPause) return
+
+        if (loadingVisivel()) return
 
 
         indicadorPlayPause.textContent = icone
@@ -485,10 +793,14 @@ function inicializarVideo() {
             indicadorPlayPause &&
             indicadorPlayPause.classList.contains('mostrar')
 
+        const deveSubir =
+            playPauseVisivel ||
+            loadingVisivel()
+
 
         indicadorVolume.classList.toggle(
             'acima-pause',
-            playPauseVisivel
+            deveSubir
         )
 
     }
@@ -607,6 +919,233 @@ function inicializarVideo() {
             )
 
         }, 1000)
+
+    }
+
+    // ==========================================
+    // CONTROLE DE VOLUME EXTERNO
+    // ==========================================
+
+    function criarControleVolume() {
+
+        controlesVolumeExternos.forEach((controle) => {
+
+            const speaker =
+                controle.querySelector('[data-volume-speaker]')
+
+            const barra =
+                controle.querySelector('[data-volume-barra]')
+
+
+            if (!speaker || !barra) return
+
+
+            speaker.addEventListener('click', (e) => {
+
+                e.stopPropagation()
+
+
+                if (barraVolumeAberta === controle) {
+
+                    esconderBarraVolume()
+
+                    return
+
+                }
+
+
+                mostrarBarraVolume(controle)
+
+            })
+
+
+            barra.addEventListener('click', (e) => {
+
+                e.stopPropagation()
+
+            })
+
+
+            barra.addEventListener('pointerdown', (e) => {
+
+                e.preventDefault()
+
+                e.stopPropagation()
+
+                arrastandoVolume = true
+
+                barra.setPointerCapture(e.pointerId)
+
+                atualizarVolumePeloPonteiro(e, controle)
+
+            })
+
+
+            barra.addEventListener('pointermove', (e) => {
+
+                if (!arrastandoVolume) return
+
+                atualizarVolumePeloPonteiro(e, controle)
+
+            })
+
+
+            barra.addEventListener('pointerup', () => {
+
+                arrastandoVolume = false
+
+            })
+
+
+            barra.addEventListener('pointercancel', () => {
+
+                arrastandoVolume = false
+
+            })
+
+        })
+
+
+        document.addEventListener('click', (e) => {
+
+            if (!barraVolumeAberta) return
+
+            if (barraVolumeAberta.contains(e.target)) return
+
+            esconderBarraVolume()
+
+        })
+
+
+        atualizarVisualBarraVolume()
+
+        atualizarEstadoFullscreenVolumeExterno()
+
+    }
+
+
+    function mostrarBarraVolume(controle) {
+
+        if (document.fullscreenElement === player) return
+
+
+        if (
+            barraVolumeAberta &&
+            barraVolumeAberta !== controle
+        ) {
+
+            esconderBarraVolume(barraVolumeAberta)
+
+        }
+
+
+        barraVolumeAberta = controle
+
+        controle.classList.add('volume-aberto')
+
+        atualizarVisualBarraVolume()
+
+    }
+
+
+    function esconderBarraVolume(controle = barraVolumeAberta) {
+
+        if (!controle) return
+
+
+        controle.classList.remove('volume-aberto')
+
+
+        if (barraVolumeAberta === controle) {
+
+            barraVolumeAberta = null
+
+        }
+
+
+        arrastandoVolume = false
+
+    }
+
+
+    function atualizarVolumePeloPonteiro(e, controle) {
+
+        const trilho =
+            controle.querySelector('[data-volume-trilho]')
+
+        if (!trilho) return
+
+
+        const limites =
+            trilho.getBoundingClientRect()
+
+        const posicao =
+            (e.clientY - limites.top) / limites.height
+
+        const novoVolume =
+            1 - posicao
+
+
+        atualizarVolume(novoVolume, false)
+
+    }
+
+
+    function atualizarVisualBarraVolume() {
+
+        const volumeAtual =
+            video.muted
+                ? 0
+                : video.volume
+
+        const porcentagem =
+            `${volumeAtual * 100}%`
+
+
+        controlesVolumeExternos.forEach((controle) => {
+
+            const preenchimento =
+                controle.querySelector('[data-volume-preenchimento]')
+
+            const thumb =
+                controle.querySelector('[data-volume-thumb]')
+
+
+            if (preenchimento) {
+
+                preenchimento.style.height = porcentagem
+
+            }
+
+
+            if (thumb) {
+
+                thumb.style.bottom = porcentagem
+
+            }
+
+        })
+
+    }
+
+
+    function atualizarEstadoFullscreenVolumeExterno() {
+
+        const emFullscreen =
+            document.fullscreenElement === player
+
+
+        document.body.classList.toggle(
+            'volume-externo-escondido',
+            emFullscreen
+        )
+
+
+        if (emFullscreen) {
+
+            esconderBarraVolume()
+
+        }
 
     }
 
@@ -793,7 +1332,7 @@ function inicializarVideo() {
     // VOLUME
     // ==========================================
 
-    function definirVolume(novoVolume) {
+    function atualizarVolume(novoVolume, exibirIndicador = true) {
 
         novoVolume =
             Math.max(0, Math.min(1, novoVolume))
@@ -818,7 +1357,21 @@ function inicializarVideo() {
         }
 
 
-        mostrarIndicadorVolume()
+        atualizarVisualBarraVolume()
+
+
+        if (exibirIndicador) {
+
+            mostrarIndicadorVolume()
+
+        }
+
+    }
+
+
+    function definirVolume(novoVolume) {
+
+        atualizarVolume(novoVolume)
 
     }
 
@@ -876,9 +1429,82 @@ function inicializarVideo() {
         }
 
 
+        atualizarVisualBarraVolume()
+
         mostrarIndicadorVolume()
 
     }
+
+
+    criarControleVolume()
+
+    function realizarSeekParaTempo(novoTempo) {
+
+        if (
+            !video.duration ||
+            !isFinite(video.duration)
+        ) {
+
+            return false
+
+        }
+
+
+        novoTempo =
+            Math.max(
+                0,
+                Math.min(video.duration, novoTempo)
+            )
+
+
+        // ==========================================
+        // ACEITOU O SEEK
+        // ==========================================
+
+        seekEmAndamento = true
+
+        reproduzirAposLoading =
+            reproduzirAposLoading ||
+            !video.paused
+
+        tempoSeekDesejado = novoTempo
+
+        recuperandoSeek = false
+
+        tentativasRecuperacaoSeek = 0
+
+        // ==========================================
+        // MOSTRA LOADING SOMENTE SE DEMORAR
+        // ==========================================
+
+        mostrarLoadingSeek()
+
+
+        // ==========================================
+        // FAZ O SEEK MAIS RECENTE
+        // ==========================================
+
+        if (frameSeek) {
+
+            cancelAnimationFrame(frameSeek)
+
+        }
+
+
+        frameSeek = requestAnimationFrame(() => {
+
+            frameSeek = null
+
+            video.currentTime = tempoSeekDesejado
+
+            agendarRecuperacaoSeek()
+
+        })
+
+        return true
+
+    }
+
 
     function realizarSeek(direcao) {
 
@@ -923,47 +1549,7 @@ function inicializarVideo() {
         }
 
 
-        // ==========================================
-        // ACEITOU O SEEK
-        // ==========================================
-
-        seekEmAndamento = true
-
-        tempoSeekDesejado = novoTempo
-
-        recuperandoSeek = false
-
-        tentativasRecuperacaoSeek = 0
-
-        // ==========================================
-        // MOSTRA LOADING SOMENTE SE DEMORAR
-        // ==========================================
-
-        mostrarLoadingSeek()
-
-
-        // ==========================================
-        // FAZ O SEEK MAIS RECENTE
-        // ==========================================
-
-        if (frameSeek) {
-
-            cancelAnimationFrame(frameSeek)
-
-        }
-
-
-        frameSeek = requestAnimationFrame(() => {
-
-            frameSeek = null
-
-            video.currentTime = tempoSeekDesejado
-
-            agendarRecuperacaoSeek()
-
-        })
-
-        return true
+        return realizarSeekParaTempo(novoTempo)
 
     }
 
@@ -1062,6 +1648,33 @@ function inicializarVideo() {
 
 
         // --------------------------------------
+        // 0-9 = IR PARA PORCENTAGEM DO VIDEO
+        // --------------------------------------
+
+        if (/^[0-9]$/.test(e.key)) {
+
+            e.preventDefault()
+
+            const percentual =
+                Number(e.key) / 10
+
+            const realizou =
+                realizarSeekParaTempo(video.duration * percentual)
+
+
+            if (realizou) {
+
+                mostrarControlesTemporariamente()
+
+            }
+
+
+            return
+
+        }
+
+
+        // --------------------------------------
         // ← = VOLTAR 5 SEGUNDOS
         // --------------------------------------
 
@@ -1142,6 +1755,113 @@ function inicializarVideo() {
         }
 
     })
+
+
+    if (progresso) {
+
+        progresso.addEventListener('pointerdown', (e) => {
+
+            if (
+                e.button !== undefined &&
+                e.button !== 0
+            ) {
+
+                return
+
+            }
+
+
+            if (!video.duration) return
+
+
+            e.preventDefault()
+
+            arrastandoProgresso = true
+
+            if (personagem) {
+
+                personagem.src =
+                    'videos/parado.png'
+
+            }
+
+            progresso.setPointerCapture(e.pointerId)
+
+            percentualProgressoArraste =
+                obterPercentualProgressoPeloPonteiro(e)
+
+            atualizarVisualProgresso(
+                percentualProgressoArraste
+            )
+
+            mostrarControlesTemporariamente()
+
+        })
+
+
+        progresso.addEventListener('pointermove', (e) => {
+
+            if (!arrastandoProgresso) return
+
+
+            percentualProgressoArraste =
+                obterPercentualProgressoPeloPonteiro(e)
+
+            atualizarVisualProgresso(
+                percentualProgressoArraste
+            )
+
+        })
+
+
+        progresso.addEventListener('pointerup', (e) => {
+
+            if (!arrastandoProgresso) return
+
+
+            arrastandoProgresso = false
+
+            if (personagem) {
+
+                personagem.src =
+                    video.paused
+                        ? 'videos/parado.png'
+                        : 'videos/andando.gif'
+
+            }
+
+            percentualProgressoArraste =
+                obterPercentualProgressoPeloPonteiro(e)
+
+            atualizarVisualProgresso(
+                percentualProgressoArraste
+            )
+
+            realizarSeekParaTempo(
+                video.duration * percentualProgressoArraste
+            )
+
+            mostrarControlesTemporariamente()
+
+        })
+
+
+        progresso.addEventListener('pointercancel', () => {
+
+            arrastandoProgresso = false
+
+            if (personagem) {
+
+                personagem.src =
+                    video.paused
+                        ? 'videos/parado.png'
+                        : 'videos/andando.gif'
+
+            }
+
+        })
+
+    }
 
 
     // ==========================================
@@ -1276,6 +1996,13 @@ function inicializarVideo() {
         'fullscreenchange',
         () => {
 
+            requestAnimationFrame(
+                atualizarCentroVideoIndicadores
+            )
+
+            atualizarEstadoFullscreenVolumeExterno()
+
+
             if (
                 document.fullscreenElement === player
             ) {
@@ -1308,28 +2035,15 @@ function inicializarVideo() {
 
         if (!video.duration) return
 
+        atualizarBarraBuffer()
+
+        if (arrastandoProgresso) return
+
 
         const percentual =
             (video.currentTime / video.duration) * 100
 
-
-        if (progressoDiv) {
-
-            progressoDiv.style.width =
-                `${percentual}% `
-
-            progressoDiv.innerHTML =
-                `<span>${Math.floor(percentual)}%</span>`
-
-        }
-
-
-        if (personagem) {
-
-            personagem.style.left =
-                `${percentual}% `
-
-        }
+        atualizarVisualProgresso(percentual / 100)
 
     }
 
